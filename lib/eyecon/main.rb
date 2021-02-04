@@ -7,14 +7,18 @@ require "rbconfig"
 
 module Eyecon
   class << self
+    CACHE_FILE = File.expand_path("../output/cache.html", __dir__)
+    INDEX_FILE = File.expand_path("../output/index.html", __dir__)
+    TEMPLATE_FILE = File.expand_path("template.html", __dir__)
+
     def search(word)
       doc = Nokogiri::HTML(URI.parse("https://play.google.com/store/search?q=#{word}&c=apps").open)
-      File.write("./lib/output/cache.html", doc)
+      File.write(CACHE_FILE, doc)
       openfile(doc)
     end
 
     def cache
-      doc = Nokogiri::HTML(File.open("./lib/output/cache.html"))
+      doc = Nokogiri::HTML(File.open(CACHE_FILE))
       openfile(doc)
     rescue StandardError => e
       puts e.message
@@ -33,15 +37,15 @@ module Eyecon
     end
 
     def render(content)
-      template = ERB.new(File.read("./lib/eyecon/template.html"))
+      template = ERB.new(File.read(TEMPLATE_FILE))
       t = template.result_with_hash(content: content)
-      File.write("./lib/output/index.html", t)
+      File.write(INDEX_FILE, t)
     end
 
     def openfile(doc)
       scrape(doc).then { |a| render(a) }
       os = RbConfig::CONFIG["host_os"]
-      exec("open", "./lib/output/index.html") if os.include?("darwin")
+      exec("open", INDEX_FILE) if os.include?("darwin")
     end
   end
 end
